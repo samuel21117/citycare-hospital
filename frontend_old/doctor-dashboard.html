@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctor Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2 style="color: var(--primary-color); margin-bottom: 30px;">HospitaLink</h2>
+            <div style="flex:1;">
+                <button class="btn btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;" onclick="showSection('queue')">Daily Queue</button>
+                <button class="btn btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;" onclick="showSection('prescribe')">E-Prescribe</button>
+            </div>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">Dr. <span id="userName">Doctor</span></p>
+                <button class="btn btn-secondary" style="width:100%; color: var(--error-color);" onclick="logout()">Log Out</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Queue Section -->
+            <div id="section-queue" class="glass-card">
+                <h3>My Appointments Queue</h3>
+                <div style="margin-top: 20px;" id="queueList">
+                    Loading...
+                </div>
+            </div>
+
+            <!-- E-Prescribe Section -->
+            <div id="section-prescribe" class="glass-card" style="display:none;">
+                <h3>Issue E-Prescription</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">Prescribe medication directly to the hospital pharmacy.</p>
+                
+                <form id="prescribeForm">
+                    <div class="form-group">
+                        <label class="form-label">Select Patient / Appointment</label>
+                        <select id="presAppSelect" class="form-control" required></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Consultation Notes & Instructions</label>
+                        <textarea id="presInstructions" class="form-control" rows="3" required></textarea>
+                    </div>
+
+                    <div style="border: 1px solid var(--border-color); padding: 16px; border-radius: 8px; margin-bottom: 20px; background: #fafafa;">
+                        <h4 style="margin-bottom: 10px;">Add Medicine</h4>
+                        <div style="display:flex; gap:10px;">
+                            <div style="flex:2;">
+                                <label class="form-label">Medicine</label>
+                                <select id="medSelect" class="form-control"></select>
+                            </div>
+                            <div style="flex:1;">
+                                <label class="form-label">Dosage</label>
+                                <input type="text" id="medDosage" class="form-control" placeholder="e.g. 1 pill twice daily">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="form-label">Quantity</label>
+                                <input type="number" id="medQty" class="form-control" value="1" min="1">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" style="margin-top: 10px;" onclick="addMedicine()">Add to Prescription</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Prescription List</label>
+                        <ul id="presList" style="list-style:none; padding:0; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+                            <!-- Medicines will be added here -->
+                        </ul>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save & Send to Pharmacy</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Widget -->
+    <div class="chatbot-widget" id="chatbotWidget">
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">Health Assistant</div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div style="background:#f1f5f9; padding:10px; border-radius:8px; align-self:flex-start; max-width:80%;">
+                    Hello Doctor. I can help answer basic queries for patients. Let me know if you need any info.
+                </div>
+            </div>
+            <div class="chatbot-input-area">
+                <input type="text" id="chatbotInput" placeholder="Type a message..." autocomplete="off">
+                <button onclick="sendMessage()" class="btn btn-primary" style="padding: 8px 12px;">Send</button>
+            </div>
+        </div>
+        <div class="chatbot-toggle" onclick="toggleChatbot()">💬</div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/doctor.js"></script>
+</body>
+</html>

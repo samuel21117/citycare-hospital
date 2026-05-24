@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: var(--surface-color);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .powerbi-placeholder {
+            width: 100%;
+            height: 400px;
+            background: #e2e8f0;
+            border: 2px dashed #94a3b8;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2 style="color: var(--primary-color); margin-bottom: 30px;">HospitaLink</h2>
+            <div style="flex:1;">
+                <button class="btn btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;" onclick="showSection('overview')">Overview</button>
+                <button class="btn btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;" onclick="showSection('users')">Manage Users</button>
+                <button class="btn btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;" onclick="showSection('analytics')">Power BI Analytics</button>
+            </div>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">Logged in as: <span id="userName">Admin</span></p>
+                <button class="btn btn-secondary" style="width:100%; color: var(--error-color);" onclick="logout()">Log Out</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Overview Section -->
+            <div id="section-overview" class="glass-card">
+                <h3>Hospital Overview</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">System-wide statistics and metrics.</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statPatients">0</div>
+                        <div class="stat-label">Total Patients</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statDoctors">0</div>
+                        <div class="stat-label">Total Doctors</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statAppointments">0</div>
+                        <div class="stat-label">Appointments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statPrescriptions">0</div>
+                        <div class="stat-label">Prescriptions Issued</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="section-users" class="glass-card" style="display:none;">
+                <h3>User Management</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">View and manage registered users.</p>
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Registered On</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Analytics Section -->
+            <div id="section-analytics" class="glass-card" style="display:none;">
+                <h3>Advanced Analytics</h3>
+                <p style="color: var(--text-secondary);">Interactive dashboards powered by Microsoft Power BI.</p>
+                <div class="powerbi-placeholder">
+                    [ Power BI Embedded Dashboard Placeholder ]
+                    <br>
+                    <span style="font-size:0.8rem; font-weight:normal;">Requires active Power BI Service configuration</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

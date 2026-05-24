@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Patient Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2 style="color: var(--primary-color); margin-bottom: 30px;">HospitaLink</h2>
+            <div style="flex:1;">
+                <button class="btn btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;" onclick="showSection('book')">Book Appointment</button>
+                <button class="btn btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;" onclick="showSection('history')">My History & Prescriptions</button>
+            </div>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">Logged in as: <span id="userName">Patient</span></p>
+                <button class="btn btn-secondary" style="width:100%; color: var(--error-color);" onclick="logout()">Log Out</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Book Appointment Section -->
+            <div id="section-book" class="glass-card">
+                <h3>Book a New Appointment</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">Select a doctor and time that works for you.</p>
+                <form id="bookingForm">
+                    <div class="form-group">
+                        <label class="form-label">Select Doctor</label>
+                        <select id="docSelect" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" id="appDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Time</label>
+                        <input type="time" id="appTime" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Consultation Type</label>
+                        <select id="appType" class="form-control" required>
+                            <option value="in-person">In-Person</option>
+                            <option value="online">Online Video Call</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Symptoms / Notes</label>
+                        <textarea id="appSymptoms" class="form-control" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Confirm Booking</button>
+                </form>
+            </div>
+
+            <!-- History Section -->
+            <div id="section-history" class="glass-card" style="display:none;">
+                <h3>My Appointments & Prescriptions</h3>
+                <div style="margin-top: 20px;" id="appointmentsList">
+                    Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Widget -->
+    <div class="chatbot-widget" id="chatbotWidget">
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">Health Assistant</div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div style="background:#f1f5f9; padding:10px; border-radius:8px; align-self:flex-start; max-width:80%;">
+                    Hello! How can I help you today?
+                </div>
+            </div>
+            <div class="chatbot-input-area">
+                <input type="text" id="chatbotInput" placeholder="Type a message..." autocomplete="off">
+                <button onclick="sendMessage()" class="btn btn-primary" style="padding: 8px 12px;">Send</button>
+            </div>
+        </div>
+        <div class="chatbot-toggle" onclick="toggleChatbot()">💬</div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/patient.js"></script>
+</body>
+</html>

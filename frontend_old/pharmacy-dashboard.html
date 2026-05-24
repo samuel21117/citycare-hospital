@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pharmacy Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2 style="color: var(--primary-color); margin-bottom: 30px;">HospitaLink</h2>
+            <div style="flex:1;">
+                <button class="btn btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;" onclick="showSection('orders')">Prescription Orders</button>
+                <button class="btn btn-secondary" style="width:100%; margin-bottom:10px; text-align:left;" onclick="showSection('inventory')">Inventory Management</button>
+            </div>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">Logged in as: <span id="userName">Pharmacist</span></p>
+                <button class="btn btn-secondary" style="width:100%; color: var(--error-color);" onclick="logout()">Log Out</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Orders Section -->
+            <div id="section-orders" class="glass-card">
+                <h3>Prescription Orders</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">Fulfill prescriptions sent by doctors.</p>
+                <div id="ordersList">
+                    Loading...
+                </div>
+            </div>
+
+            <!-- Inventory Section -->
+            <div id="section-inventory" class="glass-card" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                    <h3>Medicine Inventory</h3>
+                    <button class="btn btn-primary" onclick="showAddMedModal()">+ Add Medicine</button>
+                </div>
+                
+                <table id="inventoryTable">
+                    <thead>
+                        <tr>
+                            <th>Medicine Name</th>
+                            <th>Stock Level</th>
+                            <th>Threshold</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals for Add/Update (Simplistic approach using JS prompts or simple forms) -->
+    <!-- Add Medicine Form -->
+    <div id="addMedContainer" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:2000;">
+        <div class="glass-card" style="width:400px; background:#fff;">
+            <h4>Add New Medicine</h4>
+            <form id="addMedForm" style="margin-top:20px;">
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" id="addMedName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Initial Stock</label>
+                    <input type="number" id="addMedStock" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Low Stock Threshold</label>
+                    <input type="number" id="addMedThreshold" class="form-control" value="10" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price</label>
+                    <input type="number" step="0.01" id="addMedPrice" class="form-control" value="0.00" required>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button type="submit" class="btn btn-primary" style="flex:1;">Save</button>
+                    <button type="button" class="btn btn-secondary" style="flex:1;" onclick="document.getElementById('addMedContainer').style.display='none'">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/pharmacy.js"></script>
+</body>
+</html>

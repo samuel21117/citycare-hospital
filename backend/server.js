@@ -1,0 +1,41 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Initialize Supabase Client
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Make supabase client available in request object
+app.use((req, res, next) => {
+    req.supabase = supabase;
+    next();
+});
+
+// Basic route to test server
+app.get('/', (req, res) => {
+    res.json({ message: 'Hospital API is running' });
+});
+
+// Import and use routes
+const userRoutes = require('./routes/userRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
+const prescriptionRoutes = require('./routes/prescriptionRoutes');
+const pharmacyRoutes = require('./routes/pharmacyRoutes');
+
+app.use('/api/users', userRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/pharmacy', pharmacyRoutes);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

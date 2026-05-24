@@ -1,5 +1,4 @@
 import React from 'react';
-import { JitsiMeeting } from '@jitsi/react-sdk';
 import { useAuth } from '../context/AuthContext';
 import { APP_CONFIG } from '../config';
 import { X } from 'lucide-react';
@@ -56,33 +55,56 @@ export default function VideoConsultation({ appointmentId, onClose }) {
                 </button>
             </div>
             
-            <div style={{ flex: 1 }}>
-                <JitsiMeeting
-                    domain="meet.jit.si"
-                    roomName={roomName}
-                    configOverwrite={{
-                        startWithAudioMuted: false,
-                        startWithVideoMuted: false,
-                        prejoinPageEnabled: true
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                </div>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 600, marginBottom: '12px', margin: 0 }}>Ready to join?</h2>
+                <p style={{ color: '#94a3b8', fontSize: '1.1rem', marginBottom: '32px', textAlign: 'center', maxWidth: '400px', lineHeight: 1.5 }}>
+                    To bypass the 5-minute demo restriction, your secure video consultation will open in a new tab.
+                </p>
+                <a 
+                    href={`https://meet.jit.si/${roomName}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    onClick={onClose}
+                    style={{
+                        background: '#3b82f6',
+                        color: '#ffffff',
+                        padding: '14px 36px',
+                        borderRadius: '8px',
+                        textDecoration: 'none',
+                        fontWeight: 600,
+                        fontSize: '1.1rem',
+                        boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        display: 'inline-block'
                     }}
-                    interfaceConfigOverwrite={{
-                        DISABLE_JOIN_LEAVE_NOTIFICATIONS: true
+                    onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.6)';
                     }}
-                    userInfo={{
-                        displayName: profile?.name || 'Guest'
+                    onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'none';
+                        e.currentTarget.style.boxShadow = '0 4px 14px rgba(59, 130, 246, 0.4)';
                     }}
-                    onApiReady={(externalApi) => {
-                        // We can attach event listeners here if needed
-                        externalApi.addListener('videoConferenceLeft', () => {
-                            onClose();
-                        });
+                >
+                    Launch Video Room
+                </a>
+                <button 
+                    onClick={onClose}
+                    style={{
+                        marginTop: '24px',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#64748b',
+                        cursor: 'pointer',
+                        fontSize: '1rem',
+                        textDecoration: 'underline'
                     }}
-                    getIFrameRef={(iframeRef) => {
-                        iframeRef.style.height = '100%';
-                        iframeRef.style.width = '100%';
-                        iframeRef.style.border = 'none';
-                    }}
-                />
+                >
+                    Cancel
+                </button>
             </div>
         </div>
     );

@@ -3,9 +3,10 @@ import { useAuth } from '../context/AuthContext';
 import { fetchAPI } from '../services/api';
 import { logout } from '../services/auth';
 import { jsPDF } from 'jspdf';
-import { LayoutDashboard, Calendar, FileText, Pill, MessageCircle, HeadphonesIcon, ChevronDown, Activity, ChevronLeft, ChevronRight, Video } from 'lucide-react';
+import { LayoutDashboard, Calendar, FileText, Pill, MessageCircle, HeadphonesIcon, ChevronDown, Activity, ChevronLeft, ChevronRight, Video, LogOut } from 'lucide-react';
 import { APP_CONFIG } from '../config';
 import VideoConsultation from '../components/VideoConsultation';
+import toast from 'react-hot-toast';
 
 export default function PatientDashboard() {
     const { profile } = useAuth();
@@ -14,6 +15,12 @@ export default function PatientDashboard() {
     const [appointments, setAppointments] = useState([]);
     const [prescriptions, setPrescriptions] = useState([]);
     const [activeCallId, setActiveCallId] = useState(null);
+
+    // Chatbot state
+    const [chatMessages, setChatMessages] = useState([
+        { text: 'Hello! How can I help you today?', sender: 'bot' }
+    ]);
+    const [chatInput, setChatInput] = useState('');
 
     // Booking form state
     const [docSelect, setDocSelect] = useState('');
@@ -57,31 +64,32 @@ export default function PatientDashboard() {
         }
     };
 
-    const handleBooking = async (e) => {
+    const handleBookAppointment = async (e) => {
         e.preventDefault();
-        if(!appDate || !appTime) {
-            alert("Please select a date and time slot.");
+        if (!appDate || !appTime) {
+            toast.error("Please select a date and time slot.");
             return;
         }
 
         try {
-            await fetchAPI('/appointments', {
+            const newApp = await fetchAPI('/appointments', {
                 method: 'POST',
                 body: JSON.stringify({
                     doctor_id: docSelect,
                     appointment_date: appDate,
                     appointment_time: appTime,
-                    type: appType,
-                    symptoms: ''
+                    type: appType
                 })
             });
-            alert('Appointment booked successfully!');
+            
+            setAppointments([...appointments, newApp]);
+            toast.success('Appointment booked successfully!');
             setAppDate('');
             setAppTime('');
             loadHistory();
             setActiveSection('dashboard');
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message);
         }
     };
 
@@ -127,6 +135,27 @@ export default function PatientDashboard() {
         doc.save(`Prescription_PAT${app.patient_id.substring(0,6).toUpperCase()}_${app.appointment_date}.pdf`);
     };
 
+    const getBotResponse = (msg) => {
+        const text = msg.toLowerCase();
+        if (text.includes('headache')) return "I'm sorry you have a headache. Please rest and drink water. If it persists, book an appointment.";
+        if (text.includes('appointment') || text.includes('book')) return "You can book an appointment from the 'Appointments' tab.";
+        if (text.includes('prescription') || text.includes('medicine')) return "Your prescriptions are available in your 'Prescriptions' tab.";
+        if (text.includes('fever') || text.includes('cough')) return "Please book an appointment to consult a doctor as soon as possible.";
+        return "I'm a basic health assistant. For medical advice, please book a consultation with our doctors.";
+    };
+
+    const handleSendMessage = (e) => {
+        e.preventDefault();
+        if (!chatInput.trim()) return;
+
+        setChatMessages(prev => [...prev, { text: chatInput, sender: 'user' }]);
+        setChatInput('');
+
+        setTimeout(() => {
+            setChatMessages(prev => [...prev, { text: getBotResponse(chatInput), sender: 'bot' }]);
+        }, 500);
+    };
+
     const SidebarItem = ({ id, icon: Icon, label }) => (
         <button 
             className={`sidebar-btn ${activeSection === id ? 'active' : ''}`}
@@ -155,6 +184,13 @@ export default function PatientDashboard() {
                         <SidebarItem id="pharmacy" icon={Pill} label="Pharmacy" />
                         <SidebarItem id="chat" icon={MessageCircle} label="Chat" />
                     </div>
+                    
+                    <div className="sidebar-nav" style={{ marginTop: '20px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
+                        <button className="sidebar-btn" onClick={async () => { await logout(); }} style={{ color: '#ef4444' }}>
+                            <LogOut size={20} />
+                            Log Out
+                        </button>
+                    </div>
                 </div>
 
                 <div>
@@ -163,18 +199,17 @@ export default function PatientDashboard() {
                         <div>
                             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--slate-800)' }}>Need Help?</div>
                             <div style={{ fontSize: '0.75rem', color: 'var(--slate-500)' }}>Our support team is here to help you.</div>
-                            <a href="#" style={{ fontSize: '0.75rem', color: 'var(--teal-primary)', fontWeight: 600, textDecoration: 'none' }}>Chat with us</a>
+                            <a href="#" onClick={(e) => { e.preventDefault(); setActiveSection('chat'); }} style={{ fontSize: '0.75rem', color: 'var(--teal-primary)', fontWeight: 600, textDecoration: 'none' }}>Chat with us</a>
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' }} onClick={() => { logout(); window.location.reload(); }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
                         <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--teal-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
                             {profile?.name?.charAt(0) || 'U'}
                         </div>
                         <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: 500, color: 'var(--slate-800)' }}>
                             {profile?.name}
                         </div>
-                        <ChevronDown size={16} color="var(--slate-400)" />
                     </div>
                 </div>
             </div>
@@ -185,7 +220,7 @@ export default function PatientDashboard() {
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--slate-800)', marginBottom: '4px' }}>Book an Appointment</h2>
                         <p style={{ fontSize: '0.9rem', color: 'var(--slate-500)', marginBottom: '24px' }}>Choose your preferred department, doctor and time slot.</p>
                         
-                        <form onSubmit={handleBooking}>
+                        <form onSubmit={handleBookAppointment}>
                             <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
                                 <div className="grid-3" style={{ alignItems: 'end' }}>
                                     <div>
@@ -273,8 +308,45 @@ export default function PatientDashboard() {
                     </div>
                 )}
 
+                {activeSection === 'chat' && (
+                    <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: '80vh', background: '#fff', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                        <div style={{ padding: '20px', background: 'var(--teal-primary)', color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <MessageCircle size={24} /> Health Assistant
+                        </div>
+                        <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', background: '#f8fafc' }}>
+                            {chatMessages.map((msg, i) => (
+                                <div key={i} style={{
+                                    padding: '12px 16px',
+                                    borderRadius: '12px',
+                                    maxWidth: '75%',
+                                    marginBottom: '12px',
+                                    background: msg.sender === 'user' ? 'var(--teal-primary)' : '#e2e8f0',
+                                    color: msg.sender === 'user' ? '#fff' : '#0f172a',
+                                    alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                    lineHeight: '1.4',
+                                    fontSize: '0.95rem'
+                                }}>
+                                    {msg.text}
+                                </div>
+                            ))}
+                        </div>
+                        <form onSubmit={handleSendMessage} style={{ display: 'flex', padding: '16px', borderTop: '1px solid var(--border-color)', background: '#fff' }}>
+                            <input 
+                                type="text" 
+                                className="form-control"
+                                placeholder="Type your message here..." 
+                                value={chatInput}
+                                onChange={(e) => setChatInput(e.target.value)}
+                                style={{ flex: 1, marginRight: '12px' }}
+                            />
+                            <button type="submit" className="btn btn-primary" style={{ padding: '0 24px' }}>Send</button>
+                        </form>
+                    </div>
+                )}
+
                 {/* Dashboard and History views are merged for simplicity or could be fleshed out similar to the booking flow */}
-                {activeSection !== 'appointments' && (
+                {(activeSection !== 'appointments' && activeSection !== 'chat') && (
                     <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--slate-800)', marginBottom: '4px' }}>My Records</h2>
                         <div style={{ marginTop: '20px' }}>
@@ -283,7 +355,7 @@ export default function PatientDashboard() {
                                 return (
                                     <div key={app.id} style={{ border: '1px solid var(--border-color)', padding: '16px', marginBottom: '12px', borderRadius: '8px', background: 'var(--surface-color)' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
-                                            <h4 style={{ margin: 0 }}>Dr. {app.doctor.name}</h4>
+                                            <h4 style={{ margin: 0 }}>Dr. {app.doctor?.name || 'Unknown'}</h4>
                                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                                                 {app.type === 'online' && app.status === 'scheduled' && (
                                                     <button 

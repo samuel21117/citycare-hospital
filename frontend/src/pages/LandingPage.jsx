@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login, register } from '../services/auth';
 import { useAuth } from '../context/AuthContext';
 import { Activity } from 'lucide-react';
 import { APP_CONFIG } from '../config';
+import toast from 'react-hot-toast';
 
 export default function LandingPage() {
-    const [isLogin, setIsLogin] = useState(false); // Default to register matching the mockup
+    const [isLogin, setIsLogin] = useState(true); // Default to login
     const [error, setError] = useState('');
     
     // Form states
@@ -18,10 +19,11 @@ export default function LandingPage() {
     const navigate = useNavigate();
     const { profile } = useAuth();
 
-    if (profile) {
-        navigate(`/${profile.role}`);
-        return null;
-    }
+    useEffect(() => {
+        if (profile) {
+            navigate(`/${profile.role}`);
+        }
+    }, [profile, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -30,11 +32,10 @@ export default function LandingPage() {
         try {
             if (isLogin) {
                 await login(email, password);
-                window.location.reload(); 
+                toast.success("Logged in successfully!");
             } else {
                 await register(name, email, password, role);
-                setIsLogin(true);
-                alert("Account created! Please log in.");
+                toast.success("Account created! Logging you in...");
             }
         } catch (err) {
             setError(err.message);
@@ -82,7 +83,7 @@ export default function LandingPage() {
 
                         {!isLogin && (
                             <div className="form-group">
-                                <label className="form-label" style={{ fontSize: '0.8rem' }}>Role (For Demo Testing)</label>
+                                <label className="form-label" style={{ fontSize: '0.8rem' }}>Role</label>
                                 <select className="form-control" value={role} onChange={e => setRole(e.target.value)}>
                                     <option value="patient">Patient</option>
                                     <option value="doctor">Doctor</option>

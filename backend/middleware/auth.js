@@ -15,25 +15,15 @@ const authenticate = async (req, res, next) => {
         const { data: { user }, error } = await req.supabase.auth.getUser(token);
 
         if (error || !user) {
+            console.error("Supabase Auth Error:", error);
             return res.status(401).json({ error: 'Unauthorized: Invalid token' });
-        }
-
-        // Fetch user role from our public.users table
-        const { data: profile, error: profileError } = await req.supabase
-            .from('users')
-            .select('role, name')
-            .eq('id', user.id)
-            .single();
-
-        if (profileError || !profile) {
-             return res.status(403).json({ error: 'Forbidden: Profile not found' });
         }
 
         req.user = {
             id: user.id,
             email: user.email,
-            role: profile.role,
-            name: profile.name
+            role: user.user_metadata?.role || 'patient',
+            name: user.user_metadata?.name || 'Unknown'
         };
 
         next();

@@ -4,6 +4,7 @@ import { fetchAPI } from '../services/api';
 import { logout } from '../services/auth';
 import { Activity, ClipboardList, Package, LogOut } from 'lucide-react';
 import { APP_CONFIG } from '../config';
+import toast from 'react-hot-toast';
 
 export default function PharmacyDashboard() {
     const { profile } = useAuth();
@@ -29,6 +30,7 @@ export default function PharmacyDashboard() {
             setPrescriptions(data);
         } catch (error) {
             console.error('Error loading orders:', error);
+            toast.error('Failed to load orders');
         }
     };
 
@@ -38,6 +40,7 @@ export default function PharmacyDashboard() {
             setMedicines(data);
         } catch (error) {
             console.error('Error loading inventory:', error);
+            toast.error('Failed to load inventory');
         }
     };
 
@@ -45,11 +48,11 @@ export default function PharmacyDashboard() {
         if (!window.confirm("Are you sure you want to fulfill this order? This will deduct stock.")) return;
         try {
             await fetchAPI(`/pharmacy/prescriptions/${presId}/fulfill`, { method: 'PUT' });
-            alert('Order fulfilled successfully!');
+            toast.success('Order fulfilled successfully!');
             loadOrders();
             loadInventory();
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message);
         }
     };
 
@@ -61,9 +64,10 @@ export default function PharmacyDashboard() {
                 method: 'PUT',
                 body: JSON.stringify({ stock_level: parseInt(newStock) })
             });
+            toast.success('Stock updated successfully');
             loadInventory();
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message);
         }
     };
 
@@ -79,13 +83,13 @@ export default function PharmacyDashboard() {
                     price: parseFloat(medPrice)
                 })
             });
-            alert('Medicine added successfully.');
+            toast.success('Medicine added successfully.');
             setShowAddMed(false);
             setMedName('');
             setMedStock('');
             loadInventory();
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message);
         }
     };
 
@@ -106,9 +110,9 @@ export default function PharmacyDashboard() {
                     </button>
                 </div>
                 
-                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px', marginTop: 'auto' }}>
+                <div className="sidebar-nav" style={{ marginTop: 'auto' }}>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>Logged in as: <span>{profile?.name}</span></p>
-                    <button className="sidebar-btn" style={{ color: 'var(--error-color)' }} onClick={() => { logout(); window.location.reload(); }}>
+                    <button className="sidebar-btn" style={{ color: 'var(--error-color)' }} onClick={async () => { await logout(); }}>
                         <LogOut size={20} /> Log Out
                     </button>
                 </div>

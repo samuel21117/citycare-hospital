@@ -5,6 +5,7 @@ import { logout } from '../services/auth';
 import { Activity, Calendar, History, FileText, LogOut, Menu, Bell, Trash2, Plus, Video } from 'lucide-react';
 import { APP_CONFIG } from '../config';
 import VideoConsultation from '../components/VideoConsultation';
+import toast from 'react-hot-toast';
 
 export default function DoctorDashboard() {
     const { profile } = useAuth();
@@ -74,7 +75,7 @@ export default function DoctorDashboard() {
     const handlePrescribe = async () => {
         if (!selectedApp) return;
         if (selectedMeds.length === 0) {
-            alert('Please add at least one medicine.');
+            toast.error('Please add at least one medicine.');
             return;
         }
 
@@ -88,12 +89,12 @@ export default function DoctorDashboard() {
                     medicines: selectedMeds.map(m => ({ medicine_id: m.medicine_id, dosage: `${m.dosage} ${m.frequency} for ${m.duration}`, quantity: m.quantity }))
                 })
             });
-            alert('Prescription saved and sent to pharmacy!');
+            toast.success('Prescription saved and sent to pharmacy!');
             setInstructions('');
             setSelectedMeds([]);
             loadQueue();
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message);
         }
     };
 
@@ -130,9 +131,9 @@ export default function DoctorDashboard() {
                     <SidebarItem id="prescriptions" icon={FileText} label="Prescriptions" />
                 </div>
 
-                <button className="sidebar-btn" onClick={() => { logout(); window.location.reload(); }} style={{ color: '#fff', marginTop: 'auto' }}>
+                <button className="sidebar-btn" onClick={async () => { await logout(); }} style={{ color: '#fff', marginTop: 'auto' }}>
                     <LogOut size={20} />
-                    Log out
+                    Log Out
                 </button>
             </div>
 
@@ -179,7 +180,7 @@ export default function DoctorDashboard() {
                                             <div style={{ fontSize: '0.9rem', color: 'var(--slate-400)', width: '20px' }}>{idx + 1}</div>
                                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--slate-200)' }}></div>
                                             <div style={{ flex: 1 }}>
-                                                <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--slate-800)' }}>{app.patient.name}</div>
+                                                <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--slate-800)' }}>{app.patient?.name || 'Unknown Patient'}</div>
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--slate-500)' }}>{app.type}</div>
                                             </div>
                                             <div style={{ textAlign: 'right' }}>
@@ -202,7 +203,7 @@ export default function DoctorDashboard() {
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                                 <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--slate-200)' }}></div>
                                                 <div>
-                                                    <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0, color: 'var(--slate-800)' }}>{selectedApp.patient.name}</h2>
+                                                    <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0, color: 'var(--slate-800)' }}>{selectedApp.patient?.name || 'Unknown Patient'}</h2>
                                                     <div style={{ fontSize: '0.8rem', color: 'var(--slate-500)' }}>ID: PAT-{selectedApp.patient_id.substring(0,6).toUpperCase()} • {selectedApp.type === 'online' ? 'Online Consultation' : 'In-Person'}</div>
                                                 </div>
                                             </div>

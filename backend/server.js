@@ -15,7 +15,20 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Make supabase client available in request object
 app.use((req, res, next) => {
-    req.supabase = supabase;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        req.supabase = createClient(supabaseUrl, supabaseAnonKey, {
+            auth: { persistSession: false },
+            global: {
+                headers: { Authorization: `Bearer ${token}` }
+            }
+        });
+    } else {
+        req.supabase = createClient(supabaseUrl, supabaseAnonKey, {
+            auth: { persistSession: false }
+        });
+    }
     next();
 });
 

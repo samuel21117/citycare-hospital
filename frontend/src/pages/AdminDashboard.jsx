@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchAPI } from '../services/api';
 import { logout } from '../services/auth';
-import { Activity, LayoutDashboard, Users, Calendar, UserCheck, Pill, CreditCard, BarChart2, Package, MessageSquare, Settings, Search, Bell, Filter, Download, Plus, Shield, List, ActivitySquare, MoreVertical, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { Activity, LayoutDashboard, Users, Calendar, UserCheck, Pill, CreditCard, BarChart2, Package, MessageSquare, Settings, Search, Bell, Filter, Download, Plus, Shield, List, ActivitySquare, MoreVertical, ChevronLeft, ChevronRight, ChevronDown, LogOut } from 'lucide-react';
 import { APP_CONFIG } from '../config';
 
 export default function AdminDashboard() {
@@ -109,7 +109,14 @@ export default function AdminDashboard() {
                     <SidebarItem id="settings" icon={Settings} label="Settings" />
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'var(--navy-light)', borderRadius: '8px', marginTop: 'auto' }} onClick={() => { logout(); window.location.reload(); }}>
+                <div className="sidebar-nav" style={{ marginTop: '20px', borderTop: '1px solid #334155', paddingTop: '20px', marginBottom: '20px' }}>
+                    <button className="sidebar-btn" onClick={async () => { await logout(); }} style={{ color: '#ef4444' }}>
+                        <LogOut size={18} />
+                        Log Out
+                    </button>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'var(--navy-light)', borderRadius: '8px', marginTop: 'auto' }}>
                     <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--sky-blue)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
                         AD
                     </div>
@@ -195,7 +202,7 @@ export default function AdminDashboard() {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--slate-200)' }}></div>
                                                     <div>
-                                                        <div style={{ fontWeight: 600, color: 'var(--slate-800)' }}>{app.patient.name}</div>
+                                                        <div style={{ fontWeight: 600, color: 'var(--slate-800)' }}>{app.patient?.name || 'Unknown Patient'}</div>
                                                         <div style={{ fontSize: '0.75rem', color: 'var(--slate-400)' }}>MRN: {app.patient_id.substring(0, 6)}</div>
                                                     </div>
                                                 </div>
@@ -204,7 +211,7 @@ export default function AdminDashboard() {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--slate-200)' }}></div>
                                                     <div>
-                                                        <div style={{ fontWeight: 600, color: 'var(--slate-800)' }}>Dr. {app.doctor.name}</div>
+                                                        <div style={{ fontWeight: 600, color: 'var(--slate-800)' }}>Dr. {app.doctor?.name || 'Unknown'}</div>
                                                         <div style={{ fontSize: '0.75rem', color: 'var(--slate-400)' }}>Department</div>
                                                     </div>
                                                 </div>

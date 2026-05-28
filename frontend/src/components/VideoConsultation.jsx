@@ -1,10 +1,7 @@
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
 import { APP_CONFIG } from '../config';
 import { X } from 'lucide-react';
 
 export default function VideoConsultation({ appointmentId, onClose }) {
-    const { profile } = useAuth();
     
     // Generate a unique, consistent room name for this specific appointment
     const roomName = `${APP_CONFIG.shortName.replace(/[^a-zA-Z0-9]/g, '')}-Consultation-${appointmentId}`;
@@ -61,7 +58,7 @@ export default function VideoConsultation({ appointmentId, onClose }) {
                 </div>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: 600, marginBottom: '12px', margin: 0 }}>Ready to join?</h2>
                 <p style={{ color: '#94a3b8', fontSize: '1.1rem', marginBottom: '32px', textAlign: 'center', maxWidth: '400px', lineHeight: 1.5 }}>
-                    To bypass the 5-minute demo restriction, your secure video consultation will open in a new tab.
+                    Your secure video consultation will open in a new tab.
                 </p>
                 <a 
                     href={`https://meet.jit.si/${roomName}`} 

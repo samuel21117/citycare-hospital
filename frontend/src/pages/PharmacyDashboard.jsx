@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchAPI } from '../services/api';
 import { logout } from '../services/auth';
-import { Activity, ClipboardList, Package, LogOut } from 'lucide-react';
+import { Activity, ClipboardList, Package, LogOut, Loader } from 'lucide-react';
 import { APP_CONFIG } from '../config';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,7 @@ export default function PharmacyDashboard() {
     const [activeSection, setActiveSection] = useState('orders');
     const [prescriptions, setPrescriptions] = useState([]);
     const [medicines, setMedicines] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Add Med Form
     const [showAddMed, setShowAddMed] = useState(false);
@@ -19,11 +20,7 @@ export default function PharmacyDashboard() {
     const [medThreshold, setMedThreshold] = useState(10);
     const [medPrice, setMedPrice] = useState(0.00);
 
-    useEffect(() => {
-        loadOrders();
-        loadInventory();
-    }, []);
-
+    // Moved useEffect below to avoid accessing variables before declaration
     const loadOrders = async () => {
         try {
             const data = await fetchAPI('/prescriptions');
@@ -43,6 +40,15 @@ export default function PharmacyDashboard() {
             toast.error('Failed to load inventory');
         }
     };
+
+    useEffect(() => {
+        const init = async () => {
+            setIsLoading(true);
+            await Promise.all([loadOrders(), loadInventory()]);
+            setIsLoading(false);
+        };
+        init();
+    }, []);
 
     const handleFulfillOrder = async (presId) => {
         if (!window.confirm("Are you sure you want to fulfill this order? This will deduct stock.")) return;
@@ -119,8 +125,15 @@ export default function PharmacyDashboard() {
             </div>
 
             <div className="main-content">
-                {activeSection === 'orders' && (
-                    <div className="glass-card">
+                {isLoading ? (
+                    <div className="loading-container">
+                        <Loader className="spinner" size={48} color="#0ea5e9" />
+                        <div style={{ fontWeight: 500 }}>Loading pharmacy data...</div>
+                    </div>
+                ) : (
+                    <>
+                        {activeSection === 'orders' && (
+                            <div className="glass-card">
                         <h3>Prescription Orders</h3>
                         <p style={{ color: 'var(--text-secondary)', marginBottom: '20px' }}>Fulfill prescriptions sent by doctors.</p>
                         <div>
@@ -184,6 +197,8 @@ export default function PharmacyDashboard() {
                             </tbody>
                         </table>
                     </div>
+                )}
+                </>
                 )}
             </div>
 

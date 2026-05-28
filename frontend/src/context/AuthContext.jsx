@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../services/api';
 import { getUserProfile } from '../services/auth';
 
@@ -8,6 +8,17 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const fetchProfile = async (userId) => {
+        try {
+            const data = await getUserProfile(userId);
+            setProfile(data);
+        } catch (error) {
+            console.error("Error fetching profile:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         // Check active sessions and sets the user
@@ -32,19 +43,10 @@ export function AuthProvider({ children }) {
             }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
-
-    const fetchProfile = async (userId) => {
-        try {
-            const data = await getUserProfile(userId);
-            setProfile(data);
-        } catch (error) {
-            console.error("Error fetching profile:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const value = {
         user,
@@ -59,6 +61,7 @@ export function AuthProvider({ children }) {
     );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
     return useContext(AuthContext);
 }

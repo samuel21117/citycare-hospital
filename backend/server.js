@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
@@ -42,11 +42,13 @@ const userRoutes = require('./routes/userRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoutes');
 const pharmacyRoutes = require('./routes/pharmacyRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 app.use('/api/users', userRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/pharmacy', pharmacyRoutes);
+app.use('/api/chat', chatRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

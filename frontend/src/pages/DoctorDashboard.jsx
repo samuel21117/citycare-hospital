@@ -1,11 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchAPI } from '../services/api';
 import { logout } from '../services/auth';
-import { Activity, Calendar, History, FileText, LogOut, Menu, Bell, Trash2, Plus, Video } from 'lucide-react';
+import { Activity, Calendar, History, FileText, LogOut, Menu, Bell, Trash2, Plus, Video, Loader } from 'lucide-react';
 import { APP_CONFIG } from '../config';
 import VideoConsultation from '../components/VideoConsultation';
 import toast from 'react-hot-toast';
+
+const SidebarItem = ({ id, icon: Icon, label, activeSection, setActiveSection }) => (
+    <button 
+        className={`sidebar-btn ${activeSection === id ? 'active' : ''}`}
+        onClick={() => setActiveSection(id)}
+        style={{ marginBottom: '8px', color: '#fff' }}
+    >
+        <Icon size={20} />
+        {label}
+    </button>
+);
 
 export default function DoctorDashboard() {
     const { profile } = useAuth();
@@ -13,6 +24,7 @@ export default function DoctorDashboard() {
     const [appointments, setAppointments] = useState([]);
     const [medicines, setMedicines] = useState([]);
     const [activeCallId, setActiveCallId] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Selected Patient State
     const [selectedApp, setSelectedApp] = useState(null);
@@ -20,17 +32,10 @@ export default function DoctorDashboard() {
     const [selectedMeds, setSelectedMeds] = useState([]);
     
     const [medSelect, setMedSelect] = useState('');
-    const [medDosage, setMedDosage] = useState('1 Tablet');
-    const [medFreq, setMedFreq] = useState('Twice daily');
-    const [medDuration, setMedDuration] = useState('5 days');
+    const [medDosage] = useState('1 Tablet');
+    const [medFreq] = useState('Twice daily');
+    const [medDuration] = useState('5 days');
 
-    useEffect(() => {
-        // Add theme class to body for specific CSS variables
-        document.body.classList.add('theme-doctor');
-        loadQueue();
-        loadMedicines();
-        return () => document.body.classList.remove('theme-doctor');
-    }, []);
 
     const loadQueue = async () => {
         try {
@@ -53,18 +58,45 @@ export default function DoctorDashboard() {
         }
     };
 
+    useEffect(() => {
+        // Add theme class to body for specific CSS variables
+        document.body.classList.add('theme-doctor');
+        
+        const init = async () => {
+            setIsLoading(true);
+            await Promise.all([loadQueue(), loadMedicines()]);
+            setIsLoading(false);
+        };
+        init();
+        
+        return () => document.body.classList.remove('theme-doctor');
+    }, []);
+
     const pendingAppointments = appointments.filter(a => a.status === 'scheduled');
 
     const handleAddMedicine = () => {
         if (!medSelect) return;
         const medInfo = medicines.find(m => m.id === medSelect);
+        
+        let freqMultiplier = 1;
+        if (medFreq === 'Twice daily') freqMultiplier = 2;
+        if (medFreq === 'Thrice daily') freqMultiplier = 3;
+        
+        let durationDays = parseInt(medDuration.split(' ')[0]) || 5;
+        let dosageUnits = parseFloat(medDosage.split(' ')[0]) || 1;
+        
+        let calcQuantity = Math.ceil(dosageUnits * freqMultiplier * durationDays);
+        if (medDosage.includes('ml')) {
+             calcQuantity = 1; // e.g. 1 bottle for liquids
+        }
+
         setSelectedMeds([...selectedMeds, { 
             medicine_id: medSelect, 
             name: medInfo.name, 
             dosage: medDosage, 
             frequency: medFreq,
             duration: medDuration,
-            quantity: 10 // Mock calculation based on freq*duration
+            quantity: calcQuantity
         }]);
     };
 
@@ -98,16 +130,7 @@ export default function DoctorDashboard() {
         }
     };
 
-    const SidebarItem = ({ id, icon: Icon, label }) => (
-        <button 
-            className={`sidebar-btn ${activeSection === id ? 'active' : ''}`}
-            onClick={() => setActiveSection(id)}
-            style={{ marginBottom: '8px', color: '#fff' }}
-        >
-            <Icon size={20} />
-            {label}
-        </button>
-    );
+
 
     return (
         <div className="dashboard-layout">
@@ -126,9 +149,9 @@ export default function DoctorDashboard() {
                 </div>
 
                 <div className="sidebar-nav">
-                    <SidebarItem id="patients" icon={Calendar} label="Today's Patients" />
-                    <SidebarItem id="history" icon={History} label="History" />
-                    <SidebarItem id="prescriptions" icon={FileText} label="Prescriptions" />
+                    <SidebarItem id="patients" icon={Calendar} label="Today's Patients" activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <SidebarItem id="history" icon={History} label="History" activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <SidebarItem id="prescriptions" icon={FileText} label="Prescriptions" activeSection={activeSection} setActiveSection={setActiveSection} />
                 </div>
 
                 <button className="sidebar-btn" onClick={async () => { await logout(); }} style={{ color: '#fff', marginTop: 'auto' }}>
@@ -154,8 +177,15 @@ export default function DoctorDashboard() {
                 </div>
 
                 <div style={{ flex: 1, padding: '32px', background: 'var(--slate-50)' }}>
-                    {activeSection === 'patients' && (
-                        <div style={{ display: 'flex', gap: '24px', height: '100%' }}>
+                    {isLoading ? (
+                        <div className="loading-container">
+                            <Loader className="spinner" size={48} color="var(--teal-primary)" />
+                            <div style={{ fontWeight: 500 }}>Loading patient queue...</div>
+                        </div>
+                    ) : (
+                        <>
+                            {activeSection === 'patients' && (
+                                <div style={{ display: 'flex', gap: '24px', height: '100%' }}>
                             {/* Left Column: Queue */}
                             <div className="glass-card" style={{ width: '350px', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
                                 <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -310,6 +340,8 @@ export default function DoctorDashboard() {
                                 )}
                             </div>
                         </div>
+                    )}
+                    </>
                     )}
                 </div>
             </div>

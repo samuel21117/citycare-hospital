@@ -1,12 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchAPI } from '../services/api';
 import { logout } from '../services/auth';
 import { jsPDF } from 'jspdf';
-import { LayoutDashboard, Calendar, FileText, Pill, MessageCircle, HeadphonesIcon, ChevronDown, Activity, ChevronLeft, ChevronRight, Video, LogOut } from 'lucide-react';
+import { LayoutDashboard, Calendar, FileText, Pill, MessageCircle, HeadphonesIcon, Activity, ChevronLeft, ChevronRight, Video, LogOut, Loader } from 'lucide-react';
 import { APP_CONFIG } from '../config';
 import VideoConsultation from '../components/VideoConsultation';
 import toast from 'react-hot-toast';
+import ReactMarkdown from 'react-markdown';
+
+const SidebarItem = ({ id, icon: Icon, label, activeSection, setActiveSection }) => (
+    <button 
+        className={`sidebar-btn ${activeSection === id ? 'active' : ''}`}
+        onClick={() => setActiveSection(id)}
+        style={{ marginBottom: '8px' }}
+    >
+        <Icon size={20} />
+        {label}
+    </button>
+);
 
 export default function PatientDashboard() {
     const { profile } = useAuth();
@@ -15,12 +27,14 @@ export default function PatientDashboard() {
     const [appointments, setAppointments] = useState([]);
     const [prescriptions, setPrescriptions] = useState([]);
     const [activeCallId, setActiveCallId] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Chatbot state
     const [chatMessages, setChatMessages] = useState([
         { text: 'Hello! How can I help you today?', sender: 'bot' }
     ]);
     const [chatInput, setChatInput] = useState('');
+    const [isChatLoading, setIsChatLoading] = useState(false);
 
     // Booking form state
     const [docSelect, setDocSelect] = useState('');
@@ -36,10 +50,6 @@ export default function PatientDashboard() {
         "06:00 PM", "06:30 PM", "07:00 PM", "07:30 PM"
     ];
 
-    useEffect(() => {
-        loadDoctors();
-        loadHistory();
-    }, []);
 
     const loadDoctors = async () => {
         try {
@@ -63,6 +73,15 @@ export default function PatientDashboard() {
             console.error('Error loading history:', error);
         }
     };
+
+    useEffect(() => {
+        const init = async () => {
+            setIsLoading(true);
+            await Promise.all([loadDoctors(), loadHistory()]);
+            setIsLoading(false);
+        };
+        init();
+    }, []);
 
     const handleBookAppointment = async (e) => {
         e.preventDefault();
@@ -135,37 +154,39 @@ export default function PatientDashboard() {
         doc.save(`Prescription_PAT${app.patient_id.substring(0,6).toUpperCase()}_${app.appointment_date}.pdf`);
     };
 
-    const getBotResponse = (msg) => {
-        const text = msg.toLowerCase();
-        if (text.includes('headache')) return "I'm sorry you have a headache. Please rest and drink water. If it persists, book an appointment.";
-        if (text.includes('appointment') || text.includes('book')) return "You can book an appointment from the 'Appointments' tab.";
-        if (text.includes('prescription') || text.includes('medicine')) return "Your prescriptions are available in your 'Prescriptions' tab.";
-        if (text.includes('fever') || text.includes('cough')) return "Please book an appointment to consult a doctor as soon as possible.";
-        return "I'm a basic health assistant. For medical advice, please book a consultation with our doctors.";
+    const getBotResponse = async (msg) => {
+        try {
+            const res = await fetch('http://localhost:3000/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                return data.text;
+            } else {
+                return "I'm experiencing some technical difficulties.";
+            }
+        } catch (err) {
+            return "Unable to reach the health assistant server.";
+        }
     };
 
-    const handleSendMessage = (e) => {
+    const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!chatInput.trim()) return;
 
-        setChatMessages(prev => [...prev, { text: chatInput, sender: 'user' }]);
+        const userMsg = chatInput;
+        setChatMessages(prev => [...prev, { text: userMsg, sender: 'user' }]);
         setChatInput('');
 
-        setTimeout(() => {
-            setChatMessages(prev => [...prev, { text: getBotResponse(chatInput), sender: 'bot' }]);
-        }, 500);
+        setIsChatLoading(true);
+        const aiText = await getBotResponse(userMsg);
+        setIsChatLoading(false);
+        setChatMessages(prev => [...prev, { text: aiText, sender: 'bot' }]);
     };
 
-    const SidebarItem = ({ id, icon: Icon, label }) => (
-        <button 
-            className={`sidebar-btn ${activeSection === id ? 'active' : ''}`}
-            onClick={() => setActiveSection(id)}
-            style={{ marginBottom: '8px' }}
-        >
-            <Icon size={20} />
-            {label}
-        </button>
-    );
+
 
     return (
         <div className="dashboard-layout">
@@ -178,11 +199,11 @@ export default function PatientDashboard() {
                     </div>
                     
                     <div className="sidebar-nav" style={{ marginTop: '30px' }}>
-                        <SidebarItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
-                        <SidebarItem id="appointments" icon={Calendar} label="Appointments" />
-                        <SidebarItem id="prescriptions" icon={FileText} label="Prescriptions" />
-                        <SidebarItem id="pharmacy" icon={Pill} label="Pharmacy" />
-                        <SidebarItem id="chat" icon={MessageCircle} label="Chat" />
+                        <SidebarItem id="dashboard" icon={LayoutDashboard} label="Dashboard" activeSection={activeSection} setActiveSection={setActiveSection} />
+                        <SidebarItem id="appointments" icon={Calendar} label="Appointments" activeSection={activeSection} setActiveSection={setActiveSection} />
+                        <SidebarItem id="prescriptions" icon={FileText} label="Prescriptions" activeSection={activeSection} setActiveSection={setActiveSection} />
+                        <SidebarItem id="pharmacy" icon={Pill} label="Pharmacy" activeSection={activeSection} setActiveSection={setActiveSection} />
+                        <SidebarItem id="chat" icon={MessageCircle} label="Chat" activeSection={activeSection} setActiveSection={setActiveSection} />
                     </div>
                     
                     <div className="sidebar-nav" style={{ marginTop: '20px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
@@ -215,8 +236,15 @@ export default function PatientDashboard() {
             </div>
 
             <div className="main-content" style={{ background: '#fff' }}>
-                {activeSection === 'appointments' && (
-                    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+                {isLoading ? (
+                    <div className="loading-container">
+                        <Loader className="spinner" size={48} color="var(--teal-primary)" />
+                        <div style={{ fontWeight: 500 }}>Loading your health records...</div>
+                    </div>
+                ) : (
+                    <>
+                        {activeSection === 'appointments' && (
+                            <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--slate-800)', marginBottom: '4px' }}>Book an Appointment</h2>
                         <p style={{ fontSize: '0.9rem', color: 'var(--slate-500)', marginBottom: '24px' }}>Choose your preferred department, doctor and time slot.</p>
                         
@@ -327,9 +355,24 @@ export default function PatientDashboard() {
                                     lineHeight: '1.4',
                                     fontSize: '0.95rem'
                                 }}>
-                                    {msg.text}
+                                    <ReactMarkdown>{msg.text}</ReactMarkdown>
                                 </div>
                             ))}
+                            {isChatLoading && (
+                                <div style={{
+                                    padding: '12px 16px',
+                                    borderRadius: '12px',
+                                    maxWidth: '75%',
+                                    marginBottom: '12px',
+                                    background: '#e2e8f0',
+                                    color: '#64748b',
+                                    alignSelf: 'flex-start',
+                                    fontSize: '0.9rem',
+                                    fontStyle: 'italic'
+                                }}>
+                                    CityCare AI is typing...
+                                </div>
+                            )}
                         </div>
                         <form onSubmit={handleSendMessage} style={{ display: 'flex', padding: '16px', borderTop: '1px solid var(--border-color)', background: '#fff' }}>
                             <input 
@@ -393,6 +436,8 @@ export default function PatientDashboard() {
                             })}
                         </div>
                     </div>
+                )}
+                </>
                 )}
             </div>
             

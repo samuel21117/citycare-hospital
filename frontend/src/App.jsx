@@ -1,9 +1,8 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Toaster } from 'react-hot-toast';
 
 // Import Pages
+import AuthPage from './pages/AuthPage';
 import LandingPage from './pages/LandingPage';
 import PatientDashboard from './pages/PatientDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
@@ -18,21 +17,26 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     if (loading) return <div>Loading...</div>;
     
     if (!profile) {
-        return <Navigate to="/" replace />;
+        return <Navigate to="/auth" replace />;
     }
     
     if (allowedRoles && !allowedRoles.includes(profile.role)) {
-        return <Navigate to="/" replace />;
+        return <Navigate to="/auth" replace />;
     }
     
     return children;
 };
 
 function AppRoutes() {
+    const location = useLocation();
+    // Only show the floating chatbot on the landing page
+    const showChatbot = location.pathname === '/';
+
     return (
-        <Router>
+        <>
             <Routes>
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/auth" element={<AuthPage />} />
                 
                 <Route path="/patient" element={
                     <ProtectedRoute allowedRoles={['patient']}>
@@ -59,16 +63,17 @@ function AppRoutes() {
                 } />
             </Routes>
             
-            {/* Global Chatbot */}
-            <ChatbotWidget />
-        </Router>
+            {showChatbot && <ChatbotWidget />}
+        </>
     );
 }
 
 function App() {
     return (
         <AuthProvider>
-            <AppRoutes />
+            <Router>
+                <AppRoutes />
+            </Router>
         </AuthProvider>
     );
 }

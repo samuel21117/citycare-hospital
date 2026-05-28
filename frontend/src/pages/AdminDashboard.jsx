@@ -1,15 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
 import { fetchAPI } from '../services/api';
 import { logout } from '../services/auth';
-import { Activity, LayoutDashboard, Users, Calendar, UserCheck, Pill, CreditCard, BarChart2, Package, MessageSquare, Settings, Search, Bell, Filter, Download, Plus, Shield, List, ActivitySquare, MoreVertical, ChevronLeft, ChevronRight, ChevronDown, LogOut } from 'lucide-react';
+import { Activity, LayoutDashboard, Users, Calendar, UserCheck, Pill, CreditCard, BarChart2, Package, MessageSquare, Settings, Search, Bell, Filter, Download, Plus, Shield, List, ActivitySquare, MoreVertical, ChevronLeft, ChevronRight, ChevronDown, LogOut, Loader } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { APP_CONFIG } from '../config';
 
+const SidebarItem = ({ id, icon: Icon, label, activeSection, setActiveSection }) => (
+    <button 
+        onClick={() => setActiveSection(id)}
+        className={`sidebar-btn ${activeSection === id ? 'active' : ''}`}
+        style={{ 
+            marginBottom: '4px', 
+            color: activeSection === id ? '#fff' : 'var(--slate-400)',
+            background: activeSection === id ? 'var(--sky-blue)' : 'transparent',
+            padding: '12px 20px',
+            borderRadius: '8px'
+        }}
+    >
+        <Icon size={18} />
+        {label}
+    </button>
+);
+
+const StatCard = ({ title, value, trend, trendUp, icon: Icon, color }) => (
+    <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '24px' }}>
+        <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: `${color}15`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon size={28} />
+        </div>
+        <div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--slate-500)', fontWeight: 500, marginBottom: '4px' }}>{title}</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--slate-800)', lineHeight: 1 }}>{value}</div>
+            <div style={{ fontSize: '0.75rem', color: trendUp ? 'var(--success-color)' : 'var(--error-color)', marginTop: '8px', fontWeight: 500 }}>
+                {trendUp ? '↑' : '↓'} {trend} <span style={{ color: 'var(--slate-400)', fontWeight: 400 }}>from last month</span>
+            </div>
+        </div>
+    </div>
+);
+
+const ActionButton = ({ icon: Icon, label, color }) => (
+    <button style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 16px', border: `1px solid ${color}40`, borderRadius: '8px', background: '#fff', color: color, fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', marginBottom: '12px', transition: 'all 0.2s' }}>
+        <Icon size={18} /> {label}
+    </button>
+);
+
 export default function AdminDashboard() {
-    const { profile } = useAuth();
     const [users, setUsers] = useState([]);
     const [appointments, setAppointments] = useState([]);
-    const [prescriptions, setPrescriptions] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    
+    // Stats
     const [stats, setStats] = useState({
         patients: 0,
         doctors: 0,
@@ -19,13 +58,9 @@ export default function AdminDashboard() {
 
     const [activeSection, setActiveSection] = useState('dashboard');
 
-    useEffect(() => {
-        document.body.classList.add('theme-admin');
-        loadData();
-        return () => document.body.classList.remove('theme-admin');
-    }, []);
 
     const loadData = async () => {
+        setIsLoading(true);
         try {
             const [usersData, appsData, presData] = await Promise.all([
                 fetchAPI('/users'),
@@ -35,7 +70,6 @@ export default function AdminDashboard() {
 
             setUsers(usersData);
             setAppointments(appsData);
-            setPrescriptions(presData);
             setStats({
                 patients: usersData.filter(u => u.role === 'patient').length,
                 doctors: usersData.filter(u => u.role === 'doctor').length,
@@ -44,46 +78,19 @@ export default function AdminDashboard() {
             });
         } catch (error) {
             console.error('Error loading admin data:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const SidebarItem = ({ id, icon: Icon, label }) => (
-        <button 
-            onClick={() => setActiveSection(id)}
-            className={`sidebar-btn ${activeSection === id ? 'active' : ''}`}
-            style={{ 
-                marginBottom: '4px', 
-                color: activeSection === id ? '#fff' : 'var(--slate-400)',
-                background: activeSection === id ? 'var(--sky-blue)' : 'transparent',
-                padding: '12px 20px',
-                borderRadius: '8px'
-            }}
-        >
-            <Icon size={18} />
-            {label}
-        </button>
-    );
+    useEffect(() => {
+        document.body.classList.add('theme-admin');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        loadData();
+        return () => document.body.classList.remove('theme-admin');
+    }, []);
 
-    const StatCard = ({ title, value, trend, trendUp, icon: Icon, color }) => (
-        <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '24px' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: `${color}15`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon size={28} />
-            </div>
-            <div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--slate-500)', fontWeight: 500, marginBottom: '4px' }}>{title}</div>
-                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--slate-800)', lineHeight: 1 }}>{value}</div>
-                <div style={{ fontSize: '0.75rem', color: trendUp ? 'var(--success-color)' : 'var(--error-color)', marginTop: '8px', fontWeight: 500 }}>
-                    {trendUp ? '↑' : '↓'} {trend} <span style={{ color: 'var(--slate-400)', fontWeight: 400 }}>from last month</span>
-                </div>
-            </div>
-        </div>
-    );
 
-    const ActionButton = ({ icon: Icon, label, color }) => (
-        <button style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 16px', border: `1px solid ${color}40`, borderRadius: '8px', background: '#fff', color: color, fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', marginBottom: '12px', transition: 'all 0.2s' }}>
-            <Icon size={18} /> {label}
-        </button>
-    );
 
     return (
         <div className="dashboard-layout">
@@ -97,16 +104,16 @@ export default function AdminDashboard() {
                 </div>
                 
                 <div className="sidebar-nav">
-                    <SidebarItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
-                    <SidebarItem id="patients" icon={Users} label="Patients" />
-                    <SidebarItem id="appointments" icon={Calendar} label="Appointments" />
-                    <SidebarItem id="doctors" icon={UserCheck} label="Doctors" />
-                    <SidebarItem id="pharmacy" icon={Pill} label="Pharmacy" />
-                    <SidebarItem id="billing" icon={CreditCard} label="Billing" />
-                    <SidebarItem id="reports" icon={BarChart2} label="Reports & Analytics" />
-                    <SidebarItem id="inventory" icon={Package} label="Inventory" />
-                    <SidebarItem id="messages" icon={MessageSquare} label="Messages" />
-                    <SidebarItem id="settings" icon={Settings} label="Settings" />
+                    <SidebarItem id="dashboard" icon={LayoutDashboard} label="Dashboard" activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <SidebarItem id="patients" icon={Users} label="Patients" activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <SidebarItem id="appointments" icon={Calendar} label="Appointments" activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <SidebarItem id="doctors" icon={UserCheck} label="Doctors" activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <SidebarItem id="pharmacy" icon={Pill} label="Pharmacy" activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <SidebarItem id="billing" icon={CreditCard} label="Billing" activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <SidebarItem id="reports" icon={BarChart2} label="Reports & Analytics" activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <SidebarItem id="inventory" icon={Package} label="Inventory" activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <SidebarItem id="messages" icon={MessageSquare} label="Messages" activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <SidebarItem id="settings" icon={Settings} label="Settings" activeSection={activeSection} setActiveSection={setActiveSection} />
                 </div>
 
                 <div className="sidebar-nav" style={{ marginTop: '20px', borderTop: '1px solid #334155', paddingTop: '20px', marginBottom: '20px' }}>
@@ -131,7 +138,6 @@ export default function AdminDashboard() {
                 {/* Top Header */}
                 <div style={{ padding: '20px 32px', background: '#fff', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: 600, fontSize: '1.25rem' }}>
-                        <Menu size={24} color="var(--slate-400)" />
                         Dashboard
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
@@ -151,8 +157,15 @@ export default function AdminDashboard() {
                 </div>
 
                 <div style={{ padding: '32px', flex: 1, overflowY: 'auto' }}>
-                    {activeSection === 'dashboard' && (
+                    {isLoading ? (
+                        <div className="loading-container">
+                            <Loader className="spinner" size={48} color="var(--sky-blue)" />
+                            <div style={{ fontWeight: 500 }}>Loading dashboard data...</div>
+                        </div>
+                    ) : (
                         <>
+                            {activeSection === 'dashboard' && (
+                                <>
                             {/* Stat Cards */}
                             <div className="grid-4" style={{ marginBottom: '24px' }}>
                         <StatCard title="Total Patients" value={stats.patients} trend="8.5%" trendUp={true} icon={Users} color="#3b82f6" />
@@ -283,35 +296,94 @@ export default function AdminDashboard() {
                     )}
 
                     {activeSection === 'reports' && (
-                        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
-                                    <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--slate-800)' }}>Power BI Analytics</h2>
+                                    <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--slate-800)' }}>Hospital Analytics</h2>
                                     <p style={{ fontSize: '0.9rem', color: 'var(--slate-500)' }}>Comprehensive hospital insights and performance overview.</p>
                                 </div>
-                                <button className="btn btn-outline" style={{ color: 'var(--sky-blue)', borderColor: 'var(--sky-blue)' }}>
-                                    Connect Power BI Account
+                                <button className="btn btn-primary" style={{ background: 'var(--sky-blue)' }}>
+                                    Export Report
                                 </button>
                             </div>
                             
-                            <div className="glass-card" style={{ flex: 1, padding: 0, overflow: 'hidden', minHeight: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', border: '2px dashed var(--slate-300)' }}>
-                                <BarChart2 size={64} color="var(--slate-300)" style={{ marginBottom: '16px' }} />
-                                <h3 style={{ color: 'var(--slate-600)', marginBottom: '8px' }}>Power BI Dashboard Placeholder</h3>
-                                <p style={{ color: 'var(--slate-500)', maxWidth: '500px', textAlign: 'center', fontSize: '0.9rem', marginBottom: '24px' }}>
-                                    When you create your free Power BI account and publish your report (like the one in your mockup), you will receive an "Embed Code". Paste that embed code here.
-                                </p>
-                                <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', color: '#e2e8f0', fontFamily: 'monospace', fontSize: '0.85rem', width: '80%', textAlign: 'left' }}>
-                                    <span style={{ color: '#ec4899' }}>&lt;iframe</span> <br/>
-                                    &nbsp;&nbsp;<span style={{ color: '#38bdf8' }}>title</span>=<span style={{ color: '#a3e635' }}>"Hospital Analytics"</span> <br/>
-                                    &nbsp;&nbsp;<span style={{ color: '#38bdf8' }}>width</span>=<span style={{ color: '#a3e635' }}>"100%"</span> <br/>
-                                    &nbsp;&nbsp;<span style={{ color: '#38bdf8' }}>height</span>=<span style={{ color: '#a3e635' }}>"100%"</span> <br/>
-                                    &nbsp;&nbsp;<span style={{ color: '#38bdf8' }}>src</span>=<span style={{ color: '#a3e635' }}>"https://app.powerbi.com/reportEmbed?reportId=YOUR_ID"</span> <br/>
-                                    &nbsp;&nbsp;<span style={{ color: '#38bdf8' }}>frameborder</span>=<span style={{ color: '#a3e635' }}>"0"</span> <br/>
-                                    &nbsp;&nbsp;<span style={{ color: '#38bdf8' }}>allowFullScreen</span>=<span style={{ color: '#a3e635' }}>"true"</span><span style={{ color: '#ec4899' }}>&gt;</span><br/>
-                                    <span style={{ color: '#ec4899' }}>&lt;/iframe&gt;</span>
+                            <div className="grid-2">
+                                <div className="glass-card" style={{ height: '350px', padding: '24px' }}>
+                                    <h3 style={{ fontSize: '1.1rem', marginBottom: '24px', color: 'var(--slate-700)' }}>Users by Role</h3>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={[
+                                                    { name: 'Patients', value: stats.patients },
+                                                    { name: 'Doctors', value: stats.doctors },
+                                                    { name: 'Pharmacists', value: users.filter(u => u.role === 'pharmacy').length },
+                                                    { name: 'Admins', value: users.filter(u => u.role === 'admin').length }
+                                                ]}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={100}
+                                                fill="#8884d8"
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                                label
+                                            >
+                                                <Cell fill="#3b82f6" />
+                                                <Cell fill="#10b981" />
+                                                <Cell fill="#8b5cf6" />
+                                                <Cell fill="#f59e0b" />
+                                            </Pie>
+                                            <RechartsTooltip />
+                                            <Legend />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="glass-card" style={{ height: '350px', padding: '24px' }}>
+                                    <h3 style={{ fontSize: '1.1rem', marginBottom: '24px', color: 'var(--slate-700)' }}>Appointments Over Time (Mock)</h3>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart
+                                            data={[
+                                                { name: 'Mon', appointments: 12 },
+                                                { name: 'Tue', appointments: 19 },
+                                                { name: 'Wed', appointments: 15 },
+                                                { name: 'Thu', appointments: 22 },
+                                                { name: 'Fri', appointments: 28 },
+                                                { name: 'Sat', appointments: 10 },
+                                                { name: 'Sun', appointments: 5 },
+                                            ]}
+                                            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                            <YAxis axisLine={false} tickLine={false} />
+                                            <RechartsTooltip />
+                                            <Line type="monotone" dataKey="appointments" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
                                 </div>
                             </div>
+                            <div className="glass-card" style={{ height: '400px', padding: '24px' }}>
+                                <h3 style={{ fontSize: '1.1rem', marginBottom: '24px', color: 'var(--slate-700)' }}>Appointment Status Distribution</h3>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={[
+                                            { name: 'Scheduled', count: appointments.filter(a => a.status === 'scheduled').length },
+                                            { name: 'Completed', count: appointments.filter(a => a.status === 'completed').length },
+                                            { name: 'Cancelled', count: appointments.filter(a => a.status === 'cancelled').length },
+                                        ]}
+                                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                        <YAxis axisLine={false} tickLine={false} allowDecimals={false} />
+                                        <RechartsTooltip cursor={{ fill: 'transparent' }} />
+                                        <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
                         </div>
+                    )}
+                    </>
                     )}
                 </div>
             </div>

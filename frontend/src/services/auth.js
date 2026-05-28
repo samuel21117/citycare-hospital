@@ -1,5 +1,5 @@
 import { supabase } from './api';
-
+import toast from 'react-hot-toast';
 export async function login(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -22,8 +22,13 @@ export async function register(name, email, password, role) {
 }
 
 export async function logout() {
+    const toastId = toast.loading("Logging out...");
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    if (error) {
+        toast.error("Logout failed", { id: toastId });
+        throw error;
+    }
+    toast.success("Logged out successfully", { id: toastId });
 }
 
 export async function getUserProfile(userId) {
